@@ -4,7 +4,7 @@ import '../providers/app_provider.dart';
 import '../services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -39,15 +39,30 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuth() async {
-    final user = await AuthService().getCurrentUser();
-    if (!mounted) return;
+    try {
+      final user = await AuthService()
+          .getCurrentUser()
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              debugPrint('Auth check timed out');
+              return null;
+            },
+          );
+      if (!mounted) return;
 
-    if (user != null) {
-      // Already logged in — go to home
-      Provider.of<AppProvider>(context, listen: false).setUser(user);
-      Navigator.of(context).pushReplacementNamed('/home');
-    } else {
-      // Not logged in — go to login
+      if (user != null) {
+        // Already logged in — go to home
+        Provider.of<AppProvider>(context, listen: false).setUser(user);
+        Navigator.of(context).pushReplacementNamed('/home');
+      } else {
+        // Not logged in — go to login
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
+    } catch (e) {
+      debugPrint('Auth check error: $e');
+      if (!mounted) return;
+      // If there's an error, still go to login
       Navigator.of(context).pushReplacementNamed('/login');
     }
   }

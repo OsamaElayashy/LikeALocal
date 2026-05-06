@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/app_provider.dart';
 import '../../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -30,20 +31,34 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
     });
 
-    final user = await AuthService().login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    try {
+      final user = await AuthService().login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (user != null) {
-      Provider.of<AppProvider>(context, listen: false).setUser(user);
-      Navigator.of(context).pushReplacementNamed('/home');
-    } else {
+      if (user != null) {
+        Provider.of<AppProvider>(context, listen: false).setUser(user);
+        Navigator.of(context).pushReplacementNamed('/home');
+      } else {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Login failed. Please check your credentials.';
+        });
+      }
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Login failed. Please check your credentials.';
+        _errorMessage = AuthService().getErrorMessage(e.code);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'An unexpected error occurred. Please try again.';
       });
     }
   }
