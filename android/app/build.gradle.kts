@@ -53,3 +53,10 @@ dependencies {
   // When using the BoM, don't specify versions in Firebase dependencies
   // https://firebase.google.com/docs/android/setup#available-libraries
 }
+
+buildTypes {
+    debug {
+        // This passes your token to the app during the build process
+        resValue "string", "app_check_debug_token_label", "5e8eda74-4df3-4d3f-8d3f-8d3f8d3f8d3f" // Replace with your actual token
+    }
+}

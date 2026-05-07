@@ -46,10 +46,14 @@ class AuthService {
         debugPrint('Login successful: ${userCredential.user!.email}');
         return userData;
       } else {
-        debugPrint('User data not found in database');
-        // Sign out if user data not found
-        await _auth.signOut();
-        return null;
+        debugPrint('User data not found in database for UID: ${userCredential.user!.uid}');
+        // Don't sign out - user exists in Auth but data might be syncing
+        // Return a minimal user object created from Auth data
+        return UserModel(
+          id: userCredential.user!.uid,
+          name: userCredential.user!.displayName ?? email.split('@')[0],
+          email: userCredential.user!.email ?? email,
+        );
       }
     } on FirebaseAuthException catch (e) {
       debugPrint('Firebase Auth Error: ${e.code}');

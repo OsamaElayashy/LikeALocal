@@ -52,6 +52,10 @@ class DatabaseService {
       );
 
       if (snapshot.exists) {
+        if (snapshot.value is! Map) {
+          debugPrint('Unexpected data type for user $userId: ${snapshot.value.runtimeType}');
+          return null;
+        }
         final data = Map<String, dynamic>.from(snapshot.value as Map);
         return UserModel.fromMap(userId, data);
       }
@@ -76,9 +80,13 @@ class DatabaseService {
       );
 
       if (snapshot.exists) {
+        if (snapshot.value is! Map) {
+          debugPrint('Unexpected data type for users list: ${snapshot.value.runtimeType}');
+          return null;
+        }
         final users = Map<String, dynamic>.from(snapshot.value as Map);
         for (final entry in users.entries) {
-          if (entry.value['email'] == email) {
+          if (entry.value is Map && entry.value['email'] == email) {
             return entry.key;
           }
         }

@@ -29,9 +29,13 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
-
+  await FirebaseAppCheck.instance.activate(
+  androidProvider: AndroidProvider.debug,
+);
   runApp(const MyApp());
 }
+
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
