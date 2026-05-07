@@ -55,7 +55,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _errorMessage = 'Registration failed. Please try again.';
         });
       }
-    } on bAuthException catch (e) {
+    } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
