@@ -8,6 +8,8 @@ import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/add_place_screen.dart';
+import 'screens/bookmarks_screen.dart';
 // import 'screens/place/place_detail_screen.dart';
 // import 'screens/place/add_place_screen.dart';
 // import 'screens/chat/localbot_screen.dart';
@@ -96,8 +98,8 @@ class MyApp extends StatelessWidget {
           '/login': (ctx) => const LoginScreen(),
           '/register': (ctx) => const RegisterScreen(),
           '/home': (ctx) => const HomeScreen(),
-          // '/add-place': (ctx) => const AddPlaceScreen(),
-          // '/localbot': (ctx) => const LocalBotScreen(),
+          '/add-place': (ctx) => const AddPlaceScreen(),
+          '/bookmarks': (ctx) => const BookmarksScreen(),
         },
         onGenerateRoute: (settings) {
           // Place detail needs an argument (the Place object)
