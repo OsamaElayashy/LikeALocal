@@ -35,7 +35,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   // Gemini API key
   static const String _apiKey = geminiApiKey;
   static const String _apiUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
   @override
   void initState() {
@@ -212,21 +212,27 @@ $placesContext
 The user says: $text
 ''';
 
-      // Call Gemini API
+      // Call Gemini API using the documented generateContent endpoint
       final response = await http.post(
-        Uri.parse('$_apiUrl?key=$_apiKey'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse(_apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': _apiKey,
+        },
         body: jsonEncode({
           'contents': [
             {
+              'role': 'user',
               'parts': [
-                {'text': systemPrompt}
+                {
+                  'text': systemPrompt,
+                }
               ]
             }
           ],
           'generationConfig': {
-            'temperature': 0.7,    // 0 = factual, 1 = creative
-            'maxOutputTokens': 800, // keep responses reasonable length
+            'temperature': 0.7,
+            'maxOutputTokens': 800,
             'topP': 0.8,
           },
         }),
@@ -234,8 +240,23 @@ The user says: $text
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final reply = data['candidates'][0]['content']['parts'][0]['text']
-            as String;
+        String reply;
+        if (data['candidates'] != null && data['candidates'].isNotEmpty) {
+          final candidate = data['candidates'][0];
+          final content = candidate['content'];
+          if (content != null && content['parts'] != null &&
+              content['parts'] is List &&
+              content['parts'].isNotEmpty &&
+              content['parts'][0]['text'] != null) {
+            reply = content['parts'][0]['text'] as String;
+          } else if (candidate['output'] != null) {
+            reply = candidate['output'] as String;
+          } else {
+            reply = 'Sorry, I could not understand the response from the AI service.';
+          }
+        } else {
+          reply = 'Sorry, the AI service returned an unexpected response.';
+        }
 
         setState(() {
           _isTyping = false;
@@ -246,13 +267,12 @@ The user says: $text
           ));
         });
       } else {
-        // API error
-        final error = jsonDecode(response.body);
-        debugPrint('Gemini error: $error');
+        final bodyText = response.body;
+        debugPrint('Gemini error (${response.statusCode}): $bodyText');
         setState(() {
           _isTyping = false;
           _messages.add(ChatMessage(
-            text: "Sorry, I couldn't process that right now. Please try again!",
+            text: "Sorry, I couldn't process that right now. (${response.statusCode})",
             isUser: false,
             time: DateTime.now(),
           ));
