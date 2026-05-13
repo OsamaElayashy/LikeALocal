@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/app_provider.dart';
-import '../widgets/place_card.dart';
+import 'feed_screen.dart';
+import 'map_screen.dart';
+import 'chatbot_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,55 +12,70 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _initialized = false;
+  int _currentIndex = 0;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      // load places once when the screen is first built
-      Provider.of<AppProvider>(context, listen: false).loadPlaces();
-      _initialized = true;
+  void _onTabTapped(int index) {
+    if (index == 3) {
+      Navigator.of(context).pushNamed('/add-place');
+      return;
     }
+    setState(() => _currentIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        actions: [
-          IconButton(
-            onPressed: () => Navigator.of(context).pushNamed('/bookmarks'),
-            icon: const Icon(Icons.bookmark),
-          ),
+      // Show the current tab's screen
+      body: IndexedStack(
+        index: _currentIndex > 3 ? _currentIndex - 1 : _currentIndex,
+        children: [
+          const FeedScreen(),
+          const MapScreen(),
+          const ChatbotScreen(),
+          const ProfileScreen(),
         ],
       ),
-      body: Consumer<AppProvider>(
-        builder: (context, app, _) {
-          final places = app.filteredPlaces;
-          if (app.isLoading) return const Center(child: CircularProgressIndicator());
-          if (places.isEmpty) {
-            return RefreshIndicator(
-              onRefresh: app.refreshPlaces,
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: const [Center(child: Padding(padding: EdgeInsets.only(top: 80), child: Text('No places yet')))],
-              ),
-            );
-          }
-          return RefreshIndicator(
-            onRefresh: app.refreshPlaces,
-            child: ListView.builder(
-              itemCount: places.length,
-              itemBuilder: (ctx, i) => PlaceCard(place: places[i]),
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context).pushNamed('/add-place'),
-        child: const Icon(Icons.add),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF2563EB),
+        unselectedItemColor: const Color(0xFF9CA3AF),
+        selectedLabelStyle: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: const TextStyle(fontSize: 11),
+        elevation: 8,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.explore_outlined),
+            activeIcon: Icon(Icons.explore),
+            label: 'Explore',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map_outlined),
+            activeIcon: Icon(Icons.map),
+            label: 'Map',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.auto_awesome_outlined),
+            activeIcon: Icon(Icons.auto_awesome),
+            label: 'LocalBot',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle_outline, size: 32),
+            activeIcon: Icon(Icons.add_circle, size: 32,
+                color: Color(0xFF2563EB)),
+            label: 'Add',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }

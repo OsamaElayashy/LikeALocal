@@ -194,6 +194,42 @@ class DatabaseService {
     }
   }
 
+  Future<void> updatePlace(Place place) async {
+    try {
+      await _database.ref('places/${place.id}').set(place.toMap()).timeout(
+        const Duration(seconds: 20),
+        onTimeout: () {
+          throw TimeoutException('Update place timed out', const Duration(seconds: 20));
+        },
+      );
+      debugPrint('Place updated: ${place.id}');
+    } on TimeoutException {
+      debugPrint('Error updating place: timeout');
+      rethrow;
+    } catch (e) {
+      debugPrint('Error updating place: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deletePlace(String placeId) async {
+    try {
+      await _database.ref('places/$placeId').remove().timeout(
+        const Duration(seconds: 20),
+        onTimeout: () {
+          throw TimeoutException('Delete place timed out', const Duration(seconds: 20));
+        },
+      );
+      debugPrint('Place deleted: $placeId');
+    } on TimeoutException {
+      debugPrint('Error deleting place: timeout');
+      rethrow;
+    } catch (e) {
+      debugPrint('Error deleting place: $e');
+      rethrow;
+    }
+  }
+
   Future<void> addReview(String placeId, Review review) async {
     try {
       final ref = _database.ref('places/$placeId/reviews');
@@ -235,6 +271,129 @@ class DatabaseService {
       debugPrint('Toggled save for $placeId by $userId');
     } catch (e) {
       debugPrint('Error toggling save: $e');
+      rethrow;
+    }
+  }
+
+  // ── City filter ───────────────────────────────────────
+  // Fetch places filtered by city
+  Future<List<Place>> fetchPlacesByCity(String city) async {
+    try {
+      final allPlaces = await fetchPlaces();
+      if (city == 'All') return _sortPlaces(allPlaces);
+      return _sortPlaces(
+          allPlaces.where((p) => p.city == city).toList());
+    } catch (e) {
+      debugPrint('Error fetching places by city: $e');
+      return [];
+    }
+  }
+
+  // Super users appear first, then sort by date
+  List<Place> _sortPlaces(List<Place> places) {
+    places.sort((a, b) {
+      if (a.contributorIsSuperUser && !b.contributorIsSuperUser) return -1;
+      if (!a.contributorIsSuperUser && b.contributorIsSuperUser) return 1;
+      return b.createdAt.compareTo(a.createdAt);
+    });
+    return places;
+  }
+
+  // ── Edit review ───────────────────────────────────────
+  Future<void> editReview(
+      String placeId, String reviewId, String newComment, double newScore) async {
+    try {
+      final ref = _database.ref('places/$placeId/reviews');
+      final snapshot = await ref.get();
+      if (!snapshot.exists) return;
+
+      List<dynamic> reviews = [];
+      if (snapshot.value is List) {
+        reviews = List<dynamic>.from(snapshot.value as List);
+      } else if (snapshot.value is Map) {
+        reviews = Map<String, dynamic>.from(snapshot.value as Map).values.toList();
+      }
+
+      // Find and update the matching review
+      final updated = reviews.map((r) {
+        final map = Map<String, dynamic>.from(r);
+        if (map['reviewId'] == reviewId) {
+          map['comment'] = newComment;
+          map['score'] = newScore;
+        }
+        return map;
+      }).toList();
+
+      await ref.set(updated);
+      debugPrint('Review edited: $reviewId');
+    } catch (e) {
+      debugPrint('Error editing review: $e');
+      rethrow;
+    }
+  }
+
+  // ── Delete review ─────────────────────────────────────
+  Future<void> deleteReview(String placeId, String reviewId) async {
+    try {
+      final ref = _database.ref('places/$placeId/reviews');
+      final snapshot = await ref.get();
+      if (!snapshot.exists) return;
+
+      List<dynamic> reviews = [];
+      if (snapshot.value is List) {
+        reviews = List<dynamic>.from(snapshot.value as List);
+      } else if (snapshot.value is Map) {
+        reviews = Map<String, dynamic>.from(snapshot.value as Map).values.toList();
+      }
+
+      // Remove the matching review
+      reviews.removeWhere((r) {
+        final map = Map<String, dynamic>.from(r);
+        return map['reviewId'] == reviewId;
+      });
+
+      await ref.set(reviews);
+      debugPrint('Review deleted: $reviewId');
+    } catch (e) {
+      debugPrint('Error deleting review: $e');
+      rethrow;
+    }
+  }
+
+  // ── Super user check ──────────────────────────────────
+  // Call this after every new contribution or review
+  Future<void> checkAndUpdateSuperUser(String userId) async {
+    try {
+      final user = await getUserData(userId);
+      if (user == null) return;
+
+      if (user.qualifiesAsSuperUser && !user.isSuperUser) {
+        await updateUserData(userId, {'isSuperUser': true});
+        debugPrint('User $userId is now a Super User!');
+      }
+    } catch (e) {
+      debugPrint('Error checking super user: $e');
+    }
+  }
+
+  // ── Pin count ─────────────────────────────────────────
+  Future<void> incrementPinCount(String userId) async {
+    try {
+      final user = await getUserData(userId);
+      if (user == null) return;
+      await updateUserData(userId, {'pinCount': user.pinCount + 1});
+    } catch (e) {
+      debugPrint('Error incrementing pin count: $e');
+    }
+  }
+
+  // ── Privacy mode ──────────────────────────────────────
+  Future<void> updatePrivacyMode(String userId, bool enabled) async {
+    try {
+      await updateUserData(userId, {'chatPrivacyEnabled': enabled});
+      debugPrint('Privacy mode updated for $userId: $enabled');
+    } catch (e) {
+      debugPrint('Error updating privacy mode: $e');
       rethrow;
     }
   }

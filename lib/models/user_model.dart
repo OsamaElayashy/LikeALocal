@@ -3,10 +3,12 @@ class UserModel {
   final String name;
   final String email;
   final String avatarUrl;
-  final int contributionCount;  // places added
-  final int reviewCount;        // reviews written
-  final bool isSuperUser;       // earned by contributing a lot
-  final List<String> savedPlaces; // IDs of pinned places
+  final int contributionCount;
+  final int reviewCount;
+  final bool isSuperUser;
+  final List<String> savedPlaces;
+  final bool chatPrivacyEnabled;  // NEW — false = anyone can chat, true = no one can
+  final int pinCount;             // NEW — for monetization (free limit)
 
   UserModel({
     required this.id,
@@ -17,9 +19,10 @@ class UserModel {
     this.reviewCount = 0,
     this.isSuperUser = false,
     this.savedPlaces = const [],
+    this.chatPrivacyEnabled = false,  // NEW — chat open by default
+    this.pinCount = 0,                // NEW
   });
 
-  // Convert Firestore document → UserModel
   factory UserModel.fromMap(String id, Map<String, dynamic> data) {
     return UserModel(
       id: id,
@@ -30,10 +33,11 @@ class UserModel {
       reviewCount: data['reviewCount'] ?? 0,
       isSuperUser: data['isSuperUser'] ?? false,
       savedPlaces: List<String>.from(data['savedPlaces'] ?? []),
+      chatPrivacyEnabled: data['chatPrivacyEnabled'] ?? false,  // NEW
+      pinCount: data['pinCount'] ?? 0,                          // NEW
     );
   }
 
-  // Convert UserModel → Firestore document
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -43,10 +47,12 @@ class UserModel {
       'reviewCount': reviewCount,
       'isSuperUser': isSuperUser,
       'savedPlaces': savedPlaces,
+      'chatPrivacyEnabled': chatPrivacyEnabled,  // NEW
+      'pinCount': pinCount,                      // NEW
     };
   }
 
-  // Returns initials for avatar placeholder (e.g. "Sara Mohamed" → "SM")
+  // Initials for avatar
   String get initials {
     final parts = name.trim().split(' ');
     if (parts.length >= 2) {
@@ -55,8 +61,12 @@ class UserModel {
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
-  // Super user logic: 5+ contributions OR 10+ reviews
+  // Super user rule: 5+ contributions OR 10+ reviews
   bool get qualifiesAsSuperUser {
     return contributionCount >= 5 || reviewCount >= 10;
   }
+
+  // Monetization: free users get 10 pins max
+  static const int kFreePinLimit = 10;
+  bool get hasReachedPinLimit => pinCount >= kFreePinLimit;
 }

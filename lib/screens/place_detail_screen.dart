@@ -68,7 +68,7 @@ class PlaceDetailScreen extends StatelessWidget {
                         child: ListTile(
                           title: Text('${r.userName} • ${r.score}/5'),
                           subtitle: Text(r.comment),
-                          trailing: Text('${r.createdAt.toLocal().toString().split(' ').first}'),
+                          trailing: Text(r.createdAt.toLocal().toString().split(' ').first),
                         ),
                       )),
                 ],
@@ -88,9 +88,9 @@ class PlaceDetailScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: const Text('Rate this place'),
         content: StatefulBuilder(
-          builder: (ctx, setState) => SizedBox(
-            height: 120,
+          builder: (ctx, setState) => SingleChildScrollView(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text('${value.toStringAsFixed(1)} / 5'),
                 Slider(
@@ -114,13 +114,13 @@ class PlaceDetailScreen extends StatelessWidget {
           TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
-              // submit rating
+              final currentUser = Provider.of<AppProvider>(context, listen: false).currentUser;
               Provider.of<AppProvider>(context, listen: false).addRating(
                 place.id,
                 value,
                 commentController.text.trim(),
-                userId: 'local_user',
-                userName: 'Local User',
+                userId: currentUser?.id,
+                userName: currentUser?.name,
               );
               Navigator.of(ctx).pop();
             },

@@ -10,9 +10,7 @@ import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_place_screen.dart';
 import 'screens/bookmarks_screen.dart';
-// import 'screens/place/place_detail_screen.dart';
-// import 'screens/place/add_place_screen.dart';
-// import 'screens/chat/localbot_screen.dart';
+import 'package:likealocal/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,9 +29,11 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
-  await FirebaseAppCheck.instance.activate(
-  androidProvider: AndroidProvider.debug,
-);
+
+  // Initialize notifications
+  await NotificationService.instance.initialize();
+  await NotificationService.instance.requestPermission();
+
   runApp(const MyApp());
 }
 
