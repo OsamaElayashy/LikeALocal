@@ -42,76 +42,132 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // Light Theme
+  static final ThemeData lightTheme = ThemeData(
+    fontFamily: 'Helvetica',
+    scaffoldBackgroundColor: Colors.white,
+    primaryColor: const Color(0xFF2563EB),
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: const Color(0xFF2563EB),
+      surface: Colors.white,
+      brightness: Brightness.light,
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.white,
+      foregroundColor: Color(0xFF1A1A2E),
+      elevation: 0,
+      centerTitle: false,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF2563EB),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        minimumSize: const Size(double.infinity, 48),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(
+            color: Color(0xFF2563EB), width: 1.5),
+      ),
+      filled: true,
+      fillColor: const Color(0xFFF9FAFB),
+      labelStyle: const TextStyle(color: Color(0xFF6B7280)),
+    ),
+  );
+
+  // Dark Theme
+  static final ThemeData darkTheme = ThemeData(
+    fontFamily: 'Helvetica',
+    scaffoldBackgroundColor: const Color(0xFF1A1A2E),
+    primaryColor: const Color(0xFF2563EB),
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: const Color(0xFF2563EB),
+      surface: const Color(0xFF1A1A2E),
+      brightness: Brightness.dark,
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF1A1A2E),
+      foregroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: false,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF2563EB),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        minimumSize: const Size(double.infinity, 48),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFF374151)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFF374151)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(
+            color: Color(0xFF2563EB), width: 1.5),
+      ),
+      filled: true,
+      fillColor: const Color(0xFF374151),
+      labelStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => AppProvider(),
-      child: MaterialApp(
-        title: 'LikeALocal',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          fontFamily: 'Helvetica',
-          scaffoldBackgroundColor: Colors.white,
-          primaryColor: const Color(0xFF2563EB),
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF2563EB),
-            surface: Colors.white,
-          ),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.white,
-            foregroundColor: Color(0xFF1A1A2E),
-            elevation: 0,
-            centerTitle: false,
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              minimumSize: const Size(double.infinity, 48),
-            ),
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                  color: Color(0xFF2563EB), width: 1.5),
-            ),
-            filled: true,
-            fillColor: const Color(0xFFF9FAFB),
-            labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-          ),
-        ),
-        initialRoute: '/',
-        routes: {
-          '/': (ctx) => const SplashScreen(),
-          '/login': (ctx) => const LoginScreen(),
-          '/register': (ctx) => const RegisterScreen(),
-          '/home': (ctx) => const HomeScreen(),
-          '/add-place': (ctx) => const AddPlaceScreen(),
-          '/bookmarks': (ctx) => const BookmarksScreen(),
-        },
-        onGenerateRoute: (settings) {
-          // Place detail needs an argument (the Place object)
-          /*
-          if (settings.name == '/place-detail') {
-            return MaterialPageRoute(
-              builder: (ctx) => const PlaceDetailScreen(),
-              settings: settings,
-            );
-          }
-          */
-          return null;
+      child: Consumer<AppProvider>(
+        builder: (context, appProvider, _) {
+          return MaterialApp(
+            title: 'LikeALocal',
+            debugShowCheckedModeBanner: false,
+            theme: lightTheme,
+            darkTheme: darkTheme,
+            themeMode: appProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            initialRoute: '/',
+            routes: {
+              '/': (ctx) => const SplashScreen(),
+              '/login': (ctx) => const LoginScreen(),
+              '/register': (ctx) => const RegisterScreen(),
+              '/home': (ctx) => const HomeScreen(),
+              '/add-place': (ctx) => const AddPlaceScreen(),
+              '/bookmarks': (ctx) => const BookmarksScreen(),
+            },
+            onGenerateRoute: (settings) {
+              // Place detail needs an argument (the Place object)
+              /*
+              if (settings.name == '/place-detail') {
+                return MaterialPageRoute(
+                  builder: (ctx) => const PlaceDetailScreen(),
+                  settings: settings,
+                );
+              }
+              */
+              return null;
+            },
+          );
         },
       ),
     );

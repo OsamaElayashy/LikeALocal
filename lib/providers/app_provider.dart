@@ -77,6 +77,7 @@ class AppProvider extends ChangeNotifier {
   List<Place> _savedPlaces = [];
   bool _isLoading = false;
   String _selectedCategory = 'All';
+  bool _isDarkMode = false;
 
   // ── Getters ──────────────────────────────────────────
   UserModel? get currentUser => _currentUser;
@@ -85,6 +86,7 @@ class AppProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String get selectedCategory => _selectedCategory;
   bool get isLoggedIn => _currentUser != null;
+  bool get isDarkMode => _isDarkMode;
 
   // Filtered places based on selected category and city
   List<Place> get filteredPlaces {
@@ -246,6 +248,12 @@ class AppProvider extends ChangeNotifier {
   // ── Loading ───────────────────────────────────────────
   void setLoading(bool value) {
     _isLoading = value;
+    notifyListeners();
+  }
+
+  // ── Theme ─────────────────────────────────────────────
+  void toggleTheme() {
+    _isDarkMode = !_isDarkMode;
     notifyListeners();
   }
 

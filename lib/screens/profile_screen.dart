@@ -57,8 +57,9 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Profile'),
         actions: [
@@ -153,7 +154,7 @@ class ProfileScreen extends StatelessWidget {
               // Saved bookmarks shortcut
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFE5E7EB)),
                 ),
@@ -215,7 +216,7 @@ class ProfileScreen extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: const Color(0xFFE5E7EB)),
                     ),
@@ -311,7 +312,7 @@ class ProfileScreen extends StatelessWidget {
               // Privacy toggle
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFE5E7EB)),
                 ),
@@ -334,6 +335,30 @@ class ProfileScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 12),
+
+              // Theme toggle
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: SwitchListTile(
+                  title: const Text(
+                    'Dark mode',
+                    style: TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Switch between light and dark themes',
+                    style:
+                        TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                  ),
+                  value: app.isDarkMode,
+                  activeThumbColor: const Color(0xFF2563EB),
+                  onChanged: (_) => app.toggleTheme(),
+                ),
+              ),
 
               // Super user progress (if not yet)
               if (!user.isSuperUser)
