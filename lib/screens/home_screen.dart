@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'feed_screen.dart';
 import 'map_screen.dart';
 import 'chatbot_screen.dart';
+import 'conversations_screen.dart';
 import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   void _onTabTapped(int index) {
-    if (index == 3) {
+    if (index == 4) {
       Navigator.of(context).pushNamed('/add-place');
       return;
     }
@@ -27,11 +28,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       // Show the current tab's screen
       body: IndexedStack(
-        index: _currentIndex > 3 ? _currentIndex - 1 : _currentIndex,
+        index: _currentIndex > 4 ? _currentIndex - 1 : _currentIndex,
         children: [
           const FeedScreen(),
           const MapScreen(),
           const ChatbotScreen(),
+          const ConversationsScreen(),
           const ProfileScreen(),
         ],
       ),
@@ -39,15 +41,6 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF2563EB),
-        unselectedItemColor: const Color(0xFF9CA3AF),
-        selectedLabelStyle: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: const TextStyle(fontSize: 11),
-        elevation: 8,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.explore_outlined),
@@ -63,6 +56,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.auto_awesome_outlined),
             activeIcon: Icon(Icons.auto_awesome),
             label: 'LocalBot',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            activeIcon: Icon(Icons.chat_bubble),
+            label: 'Chats',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline, size: 32),

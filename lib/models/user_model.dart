@@ -24,11 +24,18 @@ class UserModel {
   });
 
   factory UserModel.fromMap(String id, Map<String, dynamic> data) {
+    final resolvedName =
+        (data['name'] ?? data['fullName'] ?? data['displayName'] ?? data['username'] ?? data['userName'] ?? '')
+            .toString();
+    final resolvedEmail =
+        (data['email'] ?? data['mail'] ?? data['userEmail'] ?? '').toString();
+    final resolvedAvatar = (data['avatarUrl'] ?? data['photoUrl'] ?? '').toString();
+
     return UserModel(
       id: id,
-      name: data['name'] ?? '',
-      email: data['email'] ?? '',
-      avatarUrl: data['avatarUrl'] ?? '',
+      name: resolvedName,
+      email: resolvedEmail,
+      avatarUrl: resolvedAvatar,
       contributionCount: data['contributionCount'] ?? 0,
       reviewCount: data['reviewCount'] ?? 0,
       isSuperUser: data['isSuperUser'] ?? false,

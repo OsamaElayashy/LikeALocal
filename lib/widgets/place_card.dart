@@ -11,6 +11,7 @@ class PlaceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final saved = context.watch<AppProvider>().isPlaceSaved(place.id);
+    final scheme = Theme.of(context).colorScheme;
 
     return InkWell(
       onTap: () => Navigator.of(context).push(
@@ -19,6 +20,7 @@ class PlaceCard extends StatelessWidget {
         ),
       ),
       child: Card(
+        color: scheme.surfaceContainerLow,
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 2,
@@ -34,8 +36,8 @@ class PlaceCard extends StatelessWidget {
                 fit: BoxFit.cover,
                 errorBuilder: (ctx, err, st) => Container(
                   height: 160,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.image, size: 48, color: Colors.grey),
+                  color: scheme.surfaceContainerHigh,
+                  child: Icon(Icons.image, size: 48, color: scheme.onSurfaceVariant),
                 ),
               ),
             ),
@@ -58,7 +60,7 @@ class PlaceCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text('${place.rating} (${place.reviewCount})'),
                             const SizedBox(width: 12),
-                            const Icon(Icons.location_on, size: 16, color: Colors.redAccent),
+                            Icon(Icons.location_on, size: 16, color: scheme.error),
                             const SizedBox(width: 4),
                             Text('${place.latitude.toStringAsFixed(3)}, ${place.longitude.toStringAsFixed(3)}'),
                           ],

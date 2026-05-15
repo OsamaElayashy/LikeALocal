@@ -42,17 +42,16 @@ class _FeedScreenState extends State<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
+        title: Text(
           'LikeALocal',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1A1A2E),
+            color: scheme.onSurface,
           ),
         ),
         actions: [
@@ -62,10 +61,12 @@ class _FeedScreenState extends State<FeedScreen> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _selectedCity,
-                icon: const Icon(Icons.keyboard_arrow_down,
-                    color: Color(0xFF2563EB)),
-                style: const TextStyle(
-                  color: Color(0xFF2563EB),
+                icon: Icon(
+                  Icons.keyboard_arrow_down,
+                  color: scheme.primary,
+                ),
+                style: TextStyle(
+                  color: scheme.primary,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -105,14 +106,14 @@ class _FeedScreenState extends State<FeedScreen> {
                           child: Column(children: [
                             Icon(Icons.explore_off_outlined,
                                 size: 48,
-                                color: Colors.grey[300]),
+                                color: scheme.onSurfaceVariant.withValues(alpha: 0.45)),
                             const SizedBox(height: 12),
                             Text(
                               _selectedCity == 'All'
                                   ? 'No places yet'
                                   : 'No places in $_selectedCity yet',
                               style: TextStyle(
-                                  color: Colors.grey[500],
+                                  color: scheme.onSurfaceVariant,
                                   fontSize: 15),
                             ),
                           ]),
@@ -152,6 +153,7 @@ class _FeedScreenState extends State<FeedScreen> {
 
     return Consumer<AppProvider>(
       builder: (context, app, _) {
+        final scheme = Theme.of(context).colorScheme;
         return SizedBox(
           height: 44,
           child: ListView.builder(
@@ -167,20 +169,20 @@ class _FeedScreenState extends State<FeedScreen> {
                   selected: selected,
                   onSelected: (_) =>
                       app.setCategory(categories[i]),
-                  backgroundColor: Colors.white,
-                  selectedColor: const Color(0xFFEFF6FF),
-                  checkmarkColor: const Color(0xFF2563EB),
+                  backgroundColor: scheme.surfaceContainerLow,
+                  selectedColor: scheme.primaryContainer,
+                  checkmarkColor: scheme.primary,
                   labelStyle: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: selected
-                        ? const Color(0xFF2563EB)
-                        : const Color(0xFF6B7280),
+                        ? scheme.primary
+                        : scheme.onSurfaceVariant,
                   ),
                   side: BorderSide(
                     color: selected
-                        ? const Color(0xFF2563EB)
-                        : const Color(0xFFE5E7EB),
+                        ? scheme.primary
+                        : scheme.outlineVariant,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),

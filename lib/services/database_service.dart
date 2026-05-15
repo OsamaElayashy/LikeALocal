@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import '../models/chat_models.dart';
 import '../models/user_model.dart';
 import '../models/place_model.dart';
 
@@ -18,7 +19,9 @@ class DatabaseService {
       await _database.ref('users/${user.id}').set({
         'id': user.id,
         'name': user.name,
+        'nameLower': user.name.toLowerCase(),
         'email': user.email,
+        'emailLower': user.email.toLowerCase(),
         'avatarUrl': user.avatarUrl,
         'contributionCount': user.contributionCount,
         'reviewCount': user.reviewCount,
@@ -396,5 +399,211 @@ class DatabaseService {
       debugPrint('Error updating privacy mode: $e');
       rethrow;
     }
+  }
+
+  // ── Chat: User Search ────────────────────────────────
+  Future<List<UserModel>> searchUsers({
+    required String query,
+    required String currentUserId,
+    int limit = 30,
+  }) async {
+    try {
+      final snapshot = await _database.ref('users').get().timeout(
+        const Duration(seconds: 20),
+        onTimeout: () {
+          throw TimeoutException('Search users timed out', const Duration(seconds: 20));
+        },
+      );
+
+      if (!snapshot.exists || snapshot.value is! Map) return [];
+
+      final q = _normalizeSearchText(query);
+      final usersData = Map<String, dynamic>.from(snapshot.value as Map);
+      final users = <UserModel>[];
+
+      for (final entry in usersData.entries) {
+        final uid = entry.key;
+        if (uid == currentUserId || entry.value is! Map) continue;
+
+        final rawData = Map<String, dynamic>.from(entry.value as Map);
+        final user = UserModel.fromMap(uid, rawData);
+
+        final name = _normalizeSearchText(
+          (rawData['name'] ??
+                  rawData['fullName'] ??
+                  rawData['displayName'] ??
+                  rawData['username'] ??
+                  rawData['userName'] ??
+                  user.name)
+              .toString(),
+        );
+        final email = _normalizeSearchText(
+          (rawData['email'] ?? rawData['mail'] ?? rawData['userEmail'] ?? user.email).toString(),
+        );
+        final idText = _normalizeSearchText(uid);
+        final searchableText = '$name $email $idText';
+
+        if (q.isEmpty || searchableText.contains(q)) {
+          users.add(user);
+        }
+      }
+
+      users.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      return users.take(limit).toList();
+    } on TimeoutException {
+      debugPrint('Error searching users: timeout');
+      return [];
+    } catch (e) {
+      debugPrint('Error searching users: $e');
+      return [];
+    }
+  }
+
+  String _normalizeSearchText(String value) {
+    return value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  }
+
+  // ── Chat: Direct Thread Helpers ──────────────────────
+  String buildDirectChatId(String userIdA, String userIdB) {
+    final ids = [userIdA, userIdB]..sort();
+    return '${ids[0]}__${ids[1]}';
+  }
+
+  Future<String> ensureDirectChat({
+    required UserModel currentUser,
+    required UserModel otherUser,
+  }) async {
+    final chatId = buildDirectChatId(currentUser.id, otherUser.id);
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    final ref = _database.ref('chats/$chatId');
+    final snap = await ref.get();
+    if (!snap.exists) {
+      await ref.set({
+        'participantIds': [currentUser.id, otherUser.id]..sort(),
+        'participants': {
+          currentUser.id: {
+            'name': currentUser.name,
+            'email': currentUser.email,
+            'avatarUrl': currentUser.avatarUrl,
+          },
+          otherUser.id: {
+            'name': otherUser.name,
+            'email': otherUser.email,
+            'avatarUrl': otherUser.avatarUrl,
+          },
+        },
+        'lastMessage': '',
+        'lastSenderId': '',
+        'lastMessageAt': now,
+        'createdAt': now,
+      });
+    } else {
+      // Keep participant display fields fresh.
+      await ref.child('participants/${currentUser.id}').update({
+        'name': currentUser.name,
+        'email': currentUser.email,
+        'avatarUrl': currentUser.avatarUrl,
+      });
+      await ref.child('participants/${otherUser.id}').update({
+        'name': otherUser.name,
+        'email': otherUser.email,
+        'avatarUrl': otherUser.avatarUrl,
+      });
+    }
+
+    await _database.ref('userChats/${currentUser.id}/$chatId').set(true);
+    await _database.ref('userChats/${otherUser.id}/$chatId').set(true);
+
+    return chatId;
+  }
+
+  Stream<List<ChatThread>> watchUserChats(String userId) {
+    final ref = _database.ref('chats');
+    return ref.onValue.map((event) {
+      final value = event.snapshot.value;
+      if (value == null || value is! Map) return <ChatThread>[];
+
+      final data = Map<String, dynamic>.from(value);
+      final threads = <ChatThread>[];
+      for (final entry in data.entries) {
+        if (entry.value is! Map) continue;
+        final map = Map<String, dynamic>.from(entry.value);
+        final thread = ChatThread.fromMap(entry.key, map);
+        if (thread.participantIds.contains(userId)) {
+          threads.add(thread);
+        }
+      }
+      threads.sort((a, b) => b.lastMessageAt.compareTo(a.lastMessageAt));
+      return threads;
+    });
+  }
+
+  Stream<List<DirectMessage>> watchMessages(String chatId) {
+    final ref = _database.ref('chats/$chatId/messages');
+    return ref.onValue.map((event) {
+      final value = event.snapshot.value;
+      if (value == null) return <DirectMessage>[];
+
+      final messages = <DirectMessage>[];
+      if (value is Map) {
+        final map = Map<String, dynamic>.from(value);
+        for (final entry in map.entries) {
+          if (entry.value is! Map) continue;
+          messages.add(
+            DirectMessage.fromMap(
+              entry.key,
+              Map<String, dynamic>.from(entry.value),
+            ),
+          );
+        }
+      } else if (value is List) {
+        for (int i = 0; i < value.length; i++) {
+          final item = value[i];
+          if (item is Map) {
+            messages.add(
+              DirectMessage.fromMap(
+                i.toString(),
+                Map<String, dynamic>.from(item),
+              ),
+            );
+          }
+        }
+      }
+
+      messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      return messages;
+    });
+  }
+
+  Future<void> sendDirectMessage({
+    required String chatId,
+    required UserModel sender,
+    required UserModel receiver,
+    required String text,
+  }) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+
+    final chatRef = _database.ref('chats/$chatId');
+    final messagesRef = chatRef.child('messages');
+    final newMessageRef = messagesRef.push();
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await newMessageRef.set({
+      'senderId': sender.id,
+      'receiverId': receiver.id,
+      'text': trimmed,
+      'createdAt': now,
+    });
+
+    await chatRef.update({
+      'lastMessage': trimmed,
+      'lastSenderId': sender.id,
+      'lastMessageAt': now,
+    });
+
+    await _database.ref('userChats/${sender.id}/$chatId').set(true);
+    await _database.ref('userChats/${receiver.id}/$chatId').set(true);
   }
 }

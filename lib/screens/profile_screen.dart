@@ -57,8 +57,9 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Profile'),
         actions: [
@@ -86,13 +87,13 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundColor: const Color(0xFFEFF6FF),
+                    backgroundColor: scheme.primaryContainer,
                     child: Text(
                       user.initials,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2563EB),
+                        color: scheme.onPrimaryContainer,
                       ),
                     ),
                   ),
@@ -102,10 +103,10 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       Text(
                         user.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A2E),
+                          color: scheme.onSurface,
                         ),
                       ),
                       if (user.isSuperUser) ...[
@@ -131,8 +132,8 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(user.email,
-                      style: const TextStyle(
-                          color: Color(0xFF6B7280), fontSize: 13)),
+                      style: TextStyle(
+                          color: scheme.onSurfaceVariant, fontSize: 13)),
                 ]),
               ),
 
@@ -140,11 +141,11 @@ class ProfileScreen extends StatelessWidget {
 
               // Stats row
               Row(children: [
-                _statCard('Places', user.contributionCount.toString()),
+                _statCard(context, 'Places', user.contributionCount.toString()),
                 const SizedBox(width: 12),
-                _statCard('Reviews', user.reviewCount.toString()),
+                _statCard(context, 'Reviews', user.reviewCount.toString()),
                 const SizedBox(width: 12),
-                _statCard('Saved',
+                _statCard(context, 'Saved',
                     '${user.pinCount}/${UserModel.kFreePinLimit}'),
               ]),
 
@@ -153,9 +154,9 @@ class ProfileScreen extends StatelessWidget {
               // Saved bookmarks shortcut
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: scheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  border: Border.all(color: scheme.outlineVariant),
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(
@@ -173,10 +174,10 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   subtitle: Text(
                     '${app.savedPlaces.length} bookmarked place${app.savedPlaces.length == 1 ? '' : 's'}',
-                    style: const TextStyle(color: Color(0xFF6B7280)),
+                    style: TextStyle(color: scheme.onSurfaceVariant),
                   ),
-                  trailing: const Icon(Icons.chevron_right,
-                      color: Color(0xFF9CA3AF)),
+                  trailing: Icon(Icons.chevron_right,
+                      color: scheme.onSurfaceVariant),
                   onTap: () {
                     Navigator.of(context).pushNamed('/bookmarks');
                   },
@@ -200,13 +201,13 @@ class ProfileScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
+                    color: scheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                    border: Border.all(color: scheme.outlineVariant),
                   ),
-                  child: const Text(
+                  child: Text(
                     'You have not added any places yet. Tap Add to create one.',
-                    style: TextStyle(color: Color(0xFF6B7280)),
+                    style: TextStyle(color: scheme.onSurfaceVariant),
                   ),
                 )
               else
@@ -215,9 +216,9 @@ class ProfileScreen extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: scheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      border: Border.all(color: scheme.outlineVariant),
                     ),
                     child: Row(
                       children: [
@@ -235,8 +236,8 @@ class ProfileScreen extends StatelessWidget {
                               const SizedBox(height: 6),
                               Text(
                                 place.city,
-                                style: const TextStyle(
-                                  color: Color(0xFF6B7280),
+                                style: TextStyle(
+                                  color: scheme.onSurfaceVariant,
                                   fontSize: 13,
                                 ),
                               ),
@@ -311,9 +312,38 @@ class ProfileScreen extends StatelessWidget {
               // Privacy toggle
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: scheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  border: Border.all(color: scheme.outlineVariant),
+                ),
+                child: SwitchListTile(
+                  title: const Text(
+                    'Dark mode',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Use a darker interface across the app',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  value: app.isDarkMode,
+                  activeThumbColor: const Color(0xFF2563EB),
+                  onChanged: (value) => app.setDarkMode(value),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              Container(
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: scheme.outlineVariant),
                 ),
                 child: SwitchListTile(
                   title: const Text(
@@ -321,10 +351,12 @@ class ProfileScreen extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 15, fontWeight: FontWeight.w500),
                   ),
-                  subtitle: const Text(
+                  subtitle: Text(
                     'Turn off to stop others from chatting with you',
-                    style:
-                        TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                   value: user.chatPrivacyEnabled,
                   activeThumbColor: const Color(0xFF2563EB),
@@ -390,26 +422,27 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _statCard(String label, String value) {
+  Widget _statCard(BuildContext context, String label, String value) {
+    final scheme = Theme.of(context).colorScheme;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
+          color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: scheme.outlineVariant),
         ),
         child: Column(children: [
           Text(value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A2E),
+                color: scheme.onSurface,
               )),
           const SizedBox(height: 2),
           Text(label,
-              style: const TextStyle(
-                  fontSize: 11, color: Color(0xFF6B7280))),
+              style: TextStyle(
+                  fontSize: 11, color: scheme.onSurfaceVariant)),
         ]),
       ),
     );

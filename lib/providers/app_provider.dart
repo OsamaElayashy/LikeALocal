@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../models/place_model.dart';
 import '../services/database_service.dart';
@@ -6,6 +7,8 @@ import 'package:likealocal/services/location_service.dart';
 
 class AppProvider extends ChangeNotifier {
   AppProvider() {
+    _loadThemePreference();
+
     // Populate some sample places for initial display
     _places = [
       Place(
@@ -77,6 +80,9 @@ class AppProvider extends ChangeNotifier {
   List<Place> _savedPlaces = [];
   bool _isLoading = false;
   String _selectedCategory = 'All';
+  bool _isDarkMode = false;
+
+  static const String _themePrefKey = 'is_dark_mode';
 
   // ── Getters ──────────────────────────────────────────
   UserModel? get currentUser => _currentUser;
@@ -85,6 +91,8 @@ class AppProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String get selectedCategory => _selectedCategory;
   bool get isLoggedIn => _currentUser != null;
+  bool get isDarkMode => _isDarkMode;
+  ThemeMode get themeMode => _isDarkMode ? ThemeMode.dark : ThemeMode.light;
 
   // Filtered places based on selected category and city
   List<Place> get filteredPlaces {
@@ -247,6 +255,29 @@ class AppProvider extends ChangeNotifier {
   void setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  Future<void> setDarkMode(bool enabled) async {
+    if (_isDarkMode == enabled) return;
+    _isDarkMode = enabled;
+    notifyListeners();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_themePrefKey, enabled);
+    } catch (e) {
+      debugPrint('Failed to save theme mode: $e');
+    }
+  }
+
+  Future<void> _loadThemePreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isDarkMode = prefs.getBool(_themePrefKey) ?? false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to load theme mode: $e');
+    }
   }
 
   // ── Ratings ───────────────────────────────────────────

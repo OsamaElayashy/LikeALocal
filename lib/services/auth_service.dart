@@ -47,13 +47,19 @@ class AuthService {
         return userData;
       } else {
         debugPrint('User data not found in database for UID: ${userCredential.user!.uid}');
-        // Don't sign out - user exists in Auth but data might be syncing
-        // Return a minimal user object created from Auth data
-        return UserModel(
+        // User exists in Auth but has no RTDB profile yet: create one so
+        // search/chat can discover the account.
+        final fallbackUser = UserModel(
           id: userCredential.user!.uid,
           name: userCredential.user!.displayName ?? email.split('@')[0],
           email: userCredential.user!.email ?? email,
         );
+        try {
+          await _database.saveUserData(fallbackUser);
+        } catch (e) {
+          debugPrint('Failed to backfill missing user profile on login: $e');
+        }
+        return fallbackUser;
       }
     } on FirebaseAuthException catch (e) {
       debugPrint('Firebase Auth Error: ${e.code}');
@@ -87,6 +93,8 @@ class AuthService {
         isSuperUser: false,
         savedPlaces: [],
       );
+
+      await userCredential.user?.updateDisplayName(name);
 
       // Save user data to Realtime Database
       await _database.saveUserData(newUser);
